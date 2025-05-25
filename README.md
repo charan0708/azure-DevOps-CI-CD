@@ -1,35 +1,42 @@
 # DevOps Technical Task
 
-## Overview
+# Azure DevOps CI/CD for .NET 8 Web API (Docker + AKS)
 
-This technical task allows you to demonstrate your DevOps skills! The exercise should take no more than a weekend to complete. If you need any clarification, please don't hesitate to ask us.
+This project demonstrates how to build, test, containerize, and deploy a .NET 8 Web API using Azure DevOps pipelines. The container is pushed to Docker Hub and deployed to Azure Kubernetes Service (AKS).
 
-## Task Details
+## 📦 Project Stack
+- CI/CD: Azure DevOps Pipelines
+- Container Registry: Docker Hub
+- Deployment Platform: Azure Kubernetes Service (AKS)
 
-This repository contains a simple .NET service that serves a single endpoint: `/count`. Each call to this endpoint increments a counter and returns the number of times the endpoint has been called.
+CI Pipeline: `.azure-pipelines/azure-build.yml`:
+Triggers on:
+- Push to `main`
+- Pull requests to `main`
 
-We'd like to deploy this application using an automated process with [Azure Pipelines](https://learn.microsoft.com/en-us/azure/devops/pipelines/?view=azure-devops).
+### Steps:
+1. Test: Runs `dotnet test` on the API
+2. Build: Compiles the API using `dotnet build`
+3. Dockerize & Push: Builds Docker image and pushes it to Docker Hub.
 
-The CI pipeline should include the following steps:
+## CD Pipeline: `.azure-pipelines/azure-release.yml`
 
-1. Test the application by running `dotnet test`
-2. Build the application by running `dotnet build`
-3. Publish the application using docker or as an artifact.
+### Trigger:
+- Automatically triggered on successful completion of the CI pipeline
 
-The CD pipeline should:
+### Steps:
+1. Uses Azure CLI to connect to AKS
+2. Deploys the image using `kubectl apply -f k8s/deployment.yaml`
 
-1. Be automatically triggered when the CI build completes successfully
-2. You can assume that the infrastructure already exists, the requirement is just to deploy the application.
-3. If wish to test & don't want to be billed, an azure app service offers a free tier.
+---
 
-In your solution, include a readme detailing your thought process and any design decisions you made.
+##  Kubernetes Manifest: `k8s/deployment.yaml`
 
-## Requirements
+Creates:
+- A Deployment for the `counterapi` container
+- A NodePort Service to expose it across the network or in the nodes.
 
-- Solution pushed to a public GitHub/Azure repository
-- Valid `azure-build.yml` CI pipeline containing `test`, `build`, and `publish` steps.
-- Valid `azure-release.yml` CD pipeline to deploy the solution to an azure application of your choice.
-- The CI and CD should be implemented as two separate pipelines
-- Include best practices for PR workflows, CI & CD triggers, and approval gates in your solution
+Finally the image path in the YAML is updated:
 
-If you have any questions, please do not hesitate to ask!
+```yaml
+image: charan0802/counterapi:latest
