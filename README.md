@@ -1,6 +1,6 @@
 # DevOps Technical Task
 
-# Azure DevOps CI/CD for .NET 8 Web API (Docker + AKS)
+# Azure DevOps CI/CD for .NET 8 Web app (Docker + AKS)
 
 This project demonstrates how to build, test, containerize, and deploy a .NET 8 Web API using Azure DevOps pipelines. The container is pushed to Docker Hub and deployed to Azure Kubernetes Service (AKS).
 
