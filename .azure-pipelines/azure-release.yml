@@ -1,0 +1,44 @@
+trigger: none  
+
+resources:
+  pipelines:
+    - pipeline: azure-build.yml             
+      source: azure-build              
+      trigger:
+        branches:
+          include:
+            - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  azureSubscription: 'serviceconnection01'              
+  resourceGroup: 'azure-DevOps_rg'          
+  clusterName: 'dotnet_aks_cluster'                   
+  namespace: 'default'                              
+  dockerImage: 'charan0802/counterapi:latest'       
+
+stages:
+- stage: Deploy
+  displayName: 'Deploy to AKS'
+  jobs:
+    - deployment: DeployToAKS
+      environment: aks-prod                         
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+              - task: AzureCLI@2
+                displayName: 'Get AKS Credentials'
+                inputs:
+                  azureSubscription: $(azureSubscription)
+                  scriptType: bash
+                  scriptLocation: inlineScript
+                  inlineScript: |
+                    az aks get-credentials --resource-group $(resourceGroup) --name $(clusterName) --overwrite-existing
+
+              - script: |
+                  echo "Deploying image: $(dockerImage)"
+                  kubectl apply -f k8s/deployment.yaml
+                displayName: 'kubectl apply'

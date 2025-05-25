@@ -1,0 +1,74 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  group: dockerhub-secrets
+  imageName: 'charan0802/counterapi:latest'
+  tag: '$(Build.BuildId)'
+
+stages:
+- stage: Test
+  displayName: 'Run dotnet Tests'
+  jobs:
+    - job: TestApp
+      steps:
+        - task: UseDotNet@2
+          inputs:
+            packageType: 'sdk'
+            version: '8.0'
+
+        - script: dotnet restore
+          displayName: 'Restore Packages'
+
+        - script: dotnet test
+          displayName: 'Run Tests'
+
+- stage: Build
+  displayName: 'Build dotnet Application'
+  dependsOn: Test
+  jobs:
+    - job: BuildApp
+      steps:
+        - task: UseDotNet@2
+          inputs:
+            packageType: 'sdk'
+            version: '8.0.'
+
+        - script: dotnet build --no-restore
+          displayName: 'Build Application'
+
+- stage: Publish
+  displayName: 'Publish Docker Image'
+  dependsOn: Build
+  jobs:
+    - job: DockerPublish
+      steps:
+        - task: Docker@2
+          displayName: 'Login to Docker Hub'
+          inputs:
+            command: 'login'
+            containerRegistry: ''
+            username: $(DockerHub-Username)
+            password: $(DockerHub-Token)
+        - task: Docker@2
+          displayName: 'Build and Push Docker Image'
+          inputs:
+            repository: '$(imageName)'
+            command: 'buildAndPush'
+            Dockerfile: '**/Dockerfile'
+            tags: |
+              $(tag)
+              latest
+
+        - publish: $(System.DefaultWorkingDirectory)
+          artifact: drop
