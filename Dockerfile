@@ -7,7 +7,7 @@ RUN dotnet restore ./src/CounterApi.csproj
 
 COPY . .
 WORKDIR /src
-RUN build ./src/CounterApi.csproj -c RELEASE -o /app/build
+RUN dotnet build ./src/CounterApi.csproj -c RELEASE -o /app/build
 
 FROM build as publish
 RUN dotnet publish ./src/CounterApi.csproj -c Release -o /app/publish
